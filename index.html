@@ -976,7 +976,11 @@ function editUnit(){
     <label class="fld" style="flex-direction:row;align-items:center;gap:8px"><input type="checkbox" id="e-sp" ${inSp(u)?"checked":""}> <span>בספרינט הנוכחי (${spL()})</span></label>`}
     <label class="fld"><span>קישור לתיקיית דרייב</span><input id="e-drive" dir="ltr" value="${esc(u.drive||"")}" placeholder="https://drive.google.com/…"></label>
     <div class="req-note">דד-ליין, עדיפות ואחראי משנים מהכפתורים בחלון היחידה, כדי שהסיבה תישמר בהיסטוריה.</div>
-  </div><div class="mf"><button type="button" class="btn" data-close>ביטול</button><button class="btn pri">שמירה</button></div></form>`});
+  </div><div class="mf"><button type="button" class="btn danger" id="delu" style="margin-inline-end:auto">מחיקת היחידה</button><button type="button" class="btn" data-close>ביטול</button><button class="btn pri">שמירה</button></div></form>`});
+  $("#delu").onclick=()=>{const ch=U.filter(x=>x.parent===u.code||(isE&&x.epic===u.code&&x.code!==u.code));
+    if(ch.length){toast(`אי אפשר למחוק: יש תחתיה ${ch.length} יחידות (${ch.slice(0,4).map(x=>x.code).join(", ")}). מוחקים או מעבירים אותן קודם.`);return}
+    if(!confirm(`למחוק לצמיתות את ${u.code} · ${u.title}?`))return;
+    U=U.filter(x=>x!==u);persist();closeModal();closeAll();rerender();toast(`${u.code} נמחקה`)};
   $("#edform").onsubmit=e=>{e.preventDefault();const v=id=>($(id)?.value||"").trim();
     if(!v("#e-title")){$("#e-title").closest(".fld").classList.add("miss");return}
     const ch=[];const set=(k,val)=>{if((u[k]||"")!==(val||"")){ch.push(k);u[k]=val}};
