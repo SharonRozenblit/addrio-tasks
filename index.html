@@ -787,6 +787,7 @@ function newUnit(prefill={}){
       <label class="fld" data-req="מהות הדד-ליין"><span>למה דווקא התאריך הזה? <em>*</em></span><input id="n-dw" placeholder="סוג או הסבר, אחד מספיק"></label></div>
     <div class="row2"><label class="fld"><span>Area ראשי</span><select id="n-area">${Object.entries(AREAS).map(([k,a])=>`<option value="${k}"${prefill.area===k?" selected":""}>${esc(a[0])}</option>`).join("")}</select></label>
       <label class="fld"><span>תבנית</span><select id="n-tpl"><option>ללא</option><option>שקף במצגת</option><option>פגישה עם משקיע</option><option>קמפיין</option></select></label></div>
+    ${clField("n",prefill.checklist)}
     <div class="fld"><span>מסלול ל-Done</span><div class="paths">${ORDER.map(s=>`<label><input type="checkbox" class="n-path" value="${s}" checked ${s==="todo"||s==="done"?"disabled":""}> ${ST[s][0]}</label>`).join("")}</div></div>
     <div class="req-note" id="nunote">יחידה בלי כל שדות החובה נשמרת כטיוטה בלבד.</div>
   </div><div class="mf"><label class="note" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="n-sp" ${prefill.due&&prefill.due<=SPRINT.end?"checked":""}> בספרינט הנוכחי</label><button type="button" class="btn" data-close>ביטול</button><button class="btn pri">שמירה</button></div></form>`});
@@ -804,7 +805,7 @@ function newUnit(prefill={}){
     if(par&&par.type!=="epic"&&v("#n-due")>par.due||t==="task"&&ep&&v("#n-due")>ep.due){toast(`הדד-ליין מאוחר מזה של ${par.code} (${fmt(par.due)}). יחידת-בת לא יכולה להסתיים אחרי האם.`);$("#n-due").closest(".fld").classList.add("miss");return}
     let cd;if(t==="epic"){cd=v("#n-code").toUpperCase();if(!/^[A-Z]{2,5}$/.test(cd)||get(cd)){$("#n-code-w").classList.add("miss");toast(get(cd)?`הקוד ${cd} כבר תפוס`:"צריך קוד באותיות לועזיות, למשל AMK");return}}else{const n=Math.max(0,...U.filter(u=>u.epic===ep.code&&u.code.includes("-")).map(u=>+u.code.split("-")[1]))+1;cd=`${ep.code}-${n}`}
     const path=[...document.querySelectorAll(".n-path")].filter(x=>x.checked).map(x=>x.value);
-    U.push({code:cd,type:t,epic:ep?ep.code:cd,parent:par?par.code:null,title:v("#n-title"),desc:v("#n-desc"),dod:v("#n-dod"),owner:v("#n-own"),prio:v("#n-prio"),start:v("#n-start"),due:v("#n-due"),dueType:$("#n-dt").value||"soft",dueWhy:v("#n-dw"),area:$("#n-area").value,status:"todo",path,deliverable:t==="epic"?v("#n-dod"):"",sprint:t!=="epic"&&$("#n-sp").checked?SPRINT.n:0,created:now(),by:me,comments:[],history:[]});
+    U.push({code:cd,type:t,epic:ep?ep.code:cd,parent:par?par.code:null,title:v("#n-title"),desc:v("#n-desc"),dod:v("#n-dod"),owner:v("#n-own"),prio:v("#n-prio"),start:v("#n-start"),due:v("#n-due"),dueType:$("#n-dt").value||"soft",dueWhy:v("#n-dw"),area:$("#n-area").value,status:"todo",path,deliverable:t==="epic"?v("#n-dod"):"",sprint:t!=="epic"&&$("#n-sp").checked?SPRINT.n:0,created:now(),by:me,checklist:clRead("n"),comments:[],history:[]});
     if(prefill.draftId)DRAFTS=DRAFTS.filter(x=>x.id!==prefill.draftId);
     if(prefill.from){const i=IDEAS.find(x=>x.id===prefill.from);if(i){i.status="ok";i.comments.push([me,`אושר: נפתחה יחידה ${cd}.`])}}
     persist();closeModal();rerender();toast(`${cd} נוצרה`);openUnit(cd)};
@@ -960,6 +961,11 @@ document.addEventListener("dragover",e=>{const col=e.target.closest&&e.target.cl
 document.addEventListener("drop",e=>{const col=e.target.closest&&e.target.closest(".col");if(!col||!dragCode)return;e.preventDefault();const u=get(dragCode);dragCode=null;col.classList.remove("drop");if(u.status!==col.dataset.col)setStatus(u,col.dataset.col)});
 
 /* ---------- live-app helpers ---------- */
+const clField=(pre,cl)=>`<div class="row2"><label class="fld"><span>רשימה ביחידה</span><select id="${pre}-cls"><option value="">ללא</option><option value="bullets"${cl&&cl.style==="bullets"?" selected":""}>צ'קליסט (בלי סדר)</option><option value="steps"${cl&&cl.style==="steps"?" selected":""}>סדר פעולות (ממוספר)</option></select></label><span></span></div>
+    <label class="fld" id="${pre}-cli-w"${cl&&cl.items.length?"":" hidden"}><span>פריט בכל שורה</span><textarea id="${pre}-cli" rows="4" placeholder="למשל:&#10;לבקש משלמה חיבור&#10;לקבוע פגישה עם אושרי">${cl?esc(cl.items.map(i=>i[0]).join("\n")):""}</textarea></label>`;
+const clRead=(pre,old)=>{const st=$(`#${pre}-cls`).value;if(!st)return null;const done=new Map((old?.items||[]).map(i=>[i[0],i[1]]));const items=$(`#${pre}-cli`).value.split("\n").map(x=>x.trim()).filter(Boolean).map(t=>[t,done.get(t)||0]);return items.length?{style:st,items}:null};
+document.addEventListener("change",e=>{const m=e.target.id&&e.target.id.match(/^(n|e)-cls$/);if(m){const w=$(`#${m[1]}-cli-w`);w.hidden=!e.target.value;if(e.target.value)$(`#${m[1]}-cli`).focus()}});
+const J0=o=>JSON.stringify(o??null);
 const addDays=(d,n)=>{const x=new Date(d+"T12:00");x.setDate(x.getDate()+n);return ymd(x)};
 const nextSun=d=>{let x=addDays(d||TODAY,1);while(new Date(x+"T12:00").getDay()!==0)x=addDays(x,1);return x};
 function editUnit(){
@@ -972,14 +978,17 @@ function editUnit(){
     ${isE?`<label class="fld"><span>תוצר סיום</span><input id="e-deliv" value="${esc(u.deliverable||"")}"></label>`:""}
     <div class="row2"><label class="fld"><span>תאריך התחלה</span><input type="date" id="e-start" value="${u.start||""}"></label>
       <label class="fld"><span>סוג הדד-ליין</span><select id="e-dt">${Object.entries(DUE_TYPE).map(([k,t])=>`<option value="${k}"${u.dueType===k?" selected":""}>${t}</option>`).join("")}</select></label></div>
+    <div class="row2"><label class="fld"><span>דד-ליין</span><input type="date" id="e-due" value="${u.due||""}"></label>
+      <label class="fld"><span>סיבה לשינוי הדד-ליין</span><input id="e-dr" placeholder="חובה אם התאריך משתנה"></label></div>
     <label class="fld"><span>למה דווקא התאריך הזה?</span><input id="e-dw" value="${esc(u.dueWhy||"")}"></label>
+    ${clField("e",u.checklist)}
     <div class="row2"><label class="fld"><span>Area ראשי</span><select id="e-area">${Object.entries(AREAS).map(([k,a])=>`<option value="${k}"${u.area===k?" selected":""}>${esc(a[0])}</option>`).join("")}</select></label>
       ${isE?"":`<label class="fld"><span>מצב</span><select id="e-state"><option value="">רגיל</option>${Object.entries(STATES).map(([k,s])=>`<option value="${k}"${u.state===k?" selected":""}>${s[0]}</option>`).join("")}</select></label>`}</div>
     ${isE?"":`<label class="fld"><span>Blocked by</span><select id="e-bb"><option value="">אין</option>${others.map(x=>`<option value="${x.code}"${u.blockedBy===x.code?" selected":""}>${x.code} · ${esc(x.title)}</option>`).join("")}</select></label>
     <div class="fld"><span>מסלול ל-Done</span><div class="paths">${ORDER.map(s=>`<label><input type="checkbox" class="e-path" value="${s}" ${(u.path||ORDER).includes(s)?"checked":""} ${s==="todo"||s==="done"||s===u.status?"disabled":""}> ${ST[s][0]}</label>`).join("")}</div></div>
     <label class="fld" style="flex-direction:row;align-items:center;gap:8px"><input type="checkbox" id="e-sp" ${inSp(u)?"checked":""}> <span>בספרינט הנוכחי (${spL()})</span></label>`}
     <label class="fld"><span>קישור לתיקיית דרייב</span><input id="e-drive" dir="ltr" value="${esc(u.drive||"")}" placeholder="https://drive.google.com/…"></label>
-    <div class="req-note">דד-ליין, עדיפות ואחראי משנים מהכפתורים בחלון היחידה, כדי שהסיבה תישמר בהיסטוריה.</div>
+    <div class="req-note">עדיפות ואחראי משנים מהכפתורים בחלון היחידה.</div>
   </div><div class="mf"><button type="button" class="btn danger" id="delu" style="margin-inline-end:auto">מחיקת היחידה</button><button type="button" class="btn" data-close>ביטול</button><button class="btn pri">שמירה</button></div></form>`});
   $("#delu").onclick=()=>{const ch=U.filter(x=>x.parent===u.code||(isE&&x.epic===u.code&&x.code!==u.code));
     if(ch.length){toast(`אי אפשר למחוק: יש תחתיה ${ch.length} יחידות (${ch.slice(0,4).map(x=>x.code).join(", ")}). מוחקים או מעבירים אותן קודם.`);return}
@@ -987,7 +996,15 @@ function editUnit(){
     U=U.filter(x=>x!==u);persist();closeModal();closeAll();rerender();toast(`${u.code} נמחקה`)};
   $("#edform").onsubmit=e=>{e.preventDefault();const v=id=>($(id)?.value||"").trim();
     if(!v("#e-title")){$("#e-title").closest(".fld").classList.add("miss");return}
+    const nd=v("#e-due"),dr=v("#e-dr");
+    if(nd!==(u.due||"")){
+      if(!nd){toast("צריך דד-ליין");return}
+      if(!dr){$("#e-dr").closest(".fld").classList.add("miss");toast("שינוי דד-ליין דורש סיבה");return}
+      const par=get(u.parent);if(par&&par.due&&nd>par.due){$("#e-due").closest(".fld").classList.add("miss");toast(`הדד-ליין של ${par.code} הוא ${fmt(par.due)}. יחידת-בת לא יכולה להסתיים אחרי האם.`);return}
+    }
     const ch=[];const set=(k,val)=>{if((u[k]||"")!==(val||"")){ch.push(k);u[k]=val}};
+    if(nd!==(u.due||"")){(u.history=u.history||[]).push([now(),me,`הזיז דד-ליין ${fmt(u.due)} ← ${fmt(nd)}`,dr]);u.due=nd}
+    {const ncl=clRead("e",u.checklist);if(J0(ncl)!==J0(u.checklist||null)){u.checklist=ncl;ch.push("checklist")}}
     set("title",v("#e-title"));set("desc",v("#e-desc"));set("dod",v("#e-dod"));if(isE)set("deliverable",v("#e-deliv"));
     set("start",v("#e-start"));set("dueType",v("#e-dt"));set("dueWhy",v("#e-dw"));set("area",v("#e-area"));set("drive",v("#e-drive"));
     if(!isE){set("state",v("#e-state")||null);set("blockedBy",v("#e-bb")||null);
