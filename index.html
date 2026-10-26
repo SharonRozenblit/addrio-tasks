@@ -837,7 +837,7 @@ function pop(kind,anchor){
   if(kind==="msgs"){h=`<h4>✉️ הודעות אישיות</h4>${(hub()?Object.keys(MSGS):[me]).filter(k=>(MSGS[k]||[]).length).map(k=>`<button class="it" data-gochat="${k}">${av(k,1)}<div>${unreadMsg(k)?'<span class="unseen"></span> ':""}<b>${hub()?PEOPLE[k].name:"שרון"}</b><small>${esc(MSGS[k].at(-1)[2]).slice(0,70)}</small></div></button>`).join("")}`}
   if(kind==="ideas"){h=`<h4>💡 רעיונות</h4>${IDEAS.map(i=>`<button class="it" data-goidea="1">${av(i.by,1)}<div>${can()&&i.by!==me&&(i.ts||i.at)>SEEN.ideas?'<span class="unseen"></span> ':""}<b>${esc(i.title)}</b><small>${PEOPLE[i.by]?.name||""} · ${fmt(i.at)}</small></div></button>`).join("")}`}
   if(kind==="over"){h=`<h4>⚠️ חריגות: דד-ליין שעבר</h4>${U.filter(isOver).map(u=>`<button class="it" data-open="${u.code}">${av(u.owner,1)}<div><b>${esc(u.title)}</b><small>${code(u.code)} · היה אמור להסתיים ב-${fmt(u.due)} · ${days(u.due,TODAY)} ימים באיחור</small></div></button>`).join("")||'<div class="empty">אין חריגות</div>'}`}
-  if(kind==="me"){h=`${anchor.closest(".bnav")?`<h4>מסכים</h4>${VIEWS.filter(v=>!["mine","board","list","ideas"].includes(v[0])).map(([k,l])=>`<button class="it" data-v="${k}"><span>${{timeline:"▤",dash:"◔",mine:"◉",team:"👥",sprint:"🏁",drafts:"📝",msgs:"✉️"}[k]}</span><div><b>${l}</b></div></button>`).join("")}`:""}<h4>החשבון שלי</h4><div class="it" style="cursor:default">${av(me,1)}<div><b>${PEOPLE[me].name}${PEOPLE[me].admin?' <span class="adm">מנהל</span>':""}</b><small dir="ltr" style="text-align:end">${esc(PEOPLE[me].email)}</small></div></div><button class="it" data-present="1"><span style="font-size:18px">📺</span><div><b>מצב הצגה לטלוויזיה</b><small>${MOD}. להפעלה ולכיבוי</small></div></button><button class="it" data-help="1"><kbd>?</kbd><div><b>קיצורי מקלדת</b></div></button><button class="it" data-logout="1"><span>↩</span><div><b>יציאה</b></div></button>`}
+  if(kind==="me"){h=`${anchor.closest(".bnav")?`<h4>מסכים</h4>${VIEWS.filter(v=>!["mine","board","list","ideas"].includes(v[0])).map(([k,l])=>`<button class="it" data-v="${k}"><span>${{timeline:"▤",dash:"◔",mine:"◉",team:"👥",sprint:"🏁",drafts:"📝",msgs:"✉️"}[k]}</span><div><b>${l}</b></div></button>`).join("")}`:""}<h4>החשבון שלי</h4><div class="it" style="cursor:default">${av(me,1)}<div><b>${PEOPLE[me].name}${PEOPLE[me].admin?' <span class="adm">מנהל</span>':""}</b><small dir="ltr" style="text-align:end">${esc(PEOPLE[me].email)}</small></div></div><button class="it" data-present="1"><span style="font-size:18px">📺</span><div><b>מצב הצגה לטלוויזיה</b><small>${MOD}. להפעלה ולכיבוי</small></div></button><button class="it" data-help="1"><kbd>?</kbd><div><b>קיצורי מקלדת</b></div></button>${can()?`<button class="it" data-reset="1"><span>🗑</span><div><b>איפוס כל הנתונים</b><small>מחיקת כל היחידות, הטיוטות, הרעיונות וההודעות</small></div></button>`:""}<button class="it" data-logout="1"><span>↩</span><div><b>יציאה</b></div></button>`}
   el.innerHTML=h;el.classList.toggle("sheet",!!anchor.closest(".bnav"));el.scrollTop=0;el.classList.add("on");
   const w=el.offsetWidth;let left=Math.min(Math.max(16,r.left+r.width/2-w/2),innerWidth-w-16);el.style.left=left+"px";el.style.top=(r.bottom+8)+"px";if(!el.classList.contains("sheet"))el.style.maxHeight=(innerHeight-r.bottom-24)+"px";else el.style.maxHeight="";
   if(kind==="ideas"&&can()){SEEN.ideas=now();markSeen();setTimeout(refreshCounters,400)}
@@ -867,6 +867,7 @@ document.addEventListener("click",e=>{
   const p=t.closest("[data-pop]");if(p){pop(p.dataset.pop,p);return}
   if(t.closest("#mebtn")){pop("me",t.closest("#mebtn"));return}
     if(t.closest("[data-logout]")){closeAll();window.FB&&FB.signOut();return}
+  if(t.closest("[data-reset]")){$("#pop").classList.remove("on");resetAll();return}
   if(t.closest("[data-present]")){$("#pop").classList.remove("on");togglePresent();return}
   if(t.closest("[data-help]")){$("#pop").classList.remove("on");help();return}
   const gc=t.closest("[data-gochat]");if(gc){chatWith=gc.dataset.gochat;$("#pop").classList.remove("on");go("msgs");return}
@@ -1011,6 +1012,16 @@ function editGoal(){
   </div><div class="mf"><button type="button" class="btn" data-close>ביטול</button><button class="btn pri">שמירה</button></div></form>`});
   $("#gf").onsubmit=e=>{e.preventDefault();const st=$("#g-s").value,en=$("#g-e").value;if(!st||!en||en<st){toast("תאריכים לא תקינים");return}
     SPRINT={...SPRINT,goal:$("#g-goal").value.trim(),start:st,end:en,label:`שבוע ${+st.slice(8)}.${+st.slice(5,7)}–${fmt(en)}`};persist();closeModal();render()};
+}
+function resetAll(){
+  if(!can())return;
+  modal({sm:1,h:`<div class="mh"><h3>איפוס כל הנתונים</h3></div><form id="rsf"><div class="mb">
+    <div class="req-note">נמחקים לצמיתות, אצל כולם: ${U.length} יחידות, ${DRAFTS.length} טיוטות, ${IDEAS.length} רעיונות וכל ההודעות. נשארים: רשימת ה-Areas ותאריכי הספרינט הנוכחי. אין דרך לשחזר.</div>
+    <label class="fld"><span>כדי לאשר, כתבו <b>מחיקה</b></span><input id="rs-ok" autocomplete="off"></label>
+  </div><div class="mf"><button type="button" class="btn" data-close>ביטול</button><button class="btn danger">מחיקת הכול</button></div></form>`});
+  $("#rsf").onsubmit=e=>{e.preventDefault();if($("#rs-ok").value.trim()!=="מחיקה"){$("#rs-ok").closest(".fld").classList.add("miss");return}
+    U=[];DRAFTS=[];IDEAS=[];Object.keys(MSGS).forEach(k=>MSGS[k]=[]);SPRINT={...SPRINT,goal:""};
+    persist();closeModal();closeAll();view="mine";render();toast("כל הנתונים נמחקו. אפשר להתחיל ליצור Epics")};
 }
 function exportCsv(){
   const rows=filtered();const q=x=>`"${String(x??"").replace(/"/g,'""')}"`;
