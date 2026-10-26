@@ -11,7 +11,7 @@ service cloud.firestore {
       return {
         's.rozenblit.office@gmail.com': 'sharon',
         'liambengalw@gmail.com': 'liam',
-        'yovelbenazaria@gmail.com': 'yuval',
+        'yovelbenazaria@gmail.com': 'yovel',
         'idobenazaria@gmail.com': 'ido'
       }.get(email(), '');
     }

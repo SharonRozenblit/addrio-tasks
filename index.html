@@ -426,7 +426,7 @@ const MOD=MAC?"⌃":"Alt+";
 const PEOPLE={
   sharon:{name:"שרון",role:"סמנכ״ל · PMO, מחקר, מודלים ומצגת",color:"#8b1e3f",admin:true,email:"s.rozenblit.office@gmail.com"},
   liam:{name:"ליאם",role:"מנכ״לית · חווית משתמש, אפיון ושיווק לפרטיים",color:"#e64980",admin:true,email:"liambengalw@gmail.com"},
-  yuval:{name:"יובל",role:"מהנדס תוכנה · שותף טכנולוגי",color:"#2f9e44",email:"yovelbenazaria@gmail.com"},
+  yovel:{name:"יובל",role:"מהנדס תוכנה · שותף טכנולוגי",color:"#2f9e44",email:"yovelbenazaria@gmail.com"},
   ido:{name:"עידו",role:"עיצוב ו-UX",color:"#1c7ed6",email:"idobenazaria@gmail.com"}
 };
 const keyOf=email=>Object.keys(PEOPLE).find(k=>PEOPLE[k].email===String(email||"").toLowerCase());
@@ -437,7 +437,7 @@ const ORDER=["todo","prog","rev","done"];
 const DUE_TYPE={hard:"קשיח",soft:"רך",dep:"תלוי"};
 
 /* ---------- live data (filled from Firestore by sync.js) ---------- */
-let U=[], DRAFTS=[], IDEAS=[], MSGS={liam:[],yuval:[],ido:[]};
+let U=[], DRAFTS=[], IDEAS=[], MSGS={liam:[],yovel:[],ido:[]};
 let SPRINT={n:1,label:"",start:"",end:"",goal:""};
 let SEEN={u:{},ideas:"",msg:{}}; // per-user read marks, stored in users/{me}
 let READY=false, AUTHERR="";
@@ -454,7 +454,7 @@ let SAVED=[{name:"P1 פתוחות",f:{prio:"P1",group:"owner"}},{name:"חריג�
 try{const x=JSON.parse(localStorage.getItem("addrio-saved-filters")||"null");if(Array.isArray(x))SAVED=x}catch(e){}
 const persistSaved=()=>{try{localStorage.setItem("addrio-saved-filters",JSON.stringify(SAVED))}catch(e){}};
 let ideaSector="";
-let me=null, view="mine", openCode=null, chatWith="yuval", F={...BASEF}, ideaTab="all", gPending=false;
+let me=null, view="mine", openCode=null, chatWith="yovel", F={...BASEF}, ideaTab="all", gPending=false;
 
 /* ---------- helpers ---------- */
 const $=s=>document.querySelector(s);

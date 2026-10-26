@@ -85,7 +85,7 @@ async function seedIfEmpty() {
   for (const u of SEED.units) b.set(doc(db, "units", u.code), { j: J(u), n: u.n, status: u.status || "", owner: u.owner || "" });
   b.set(doc(db, "meta", "areas"), { j: J(SEED.areas) });
   b.set(doc(db, "meta", "sprint"), { j: J(SEED.sprint) });
-  for (const k of ["liam", "yuval", "ido"]) b.set(doc(db, "msgs", k), { j: "[]" });
+  for (const k of ["liam", "yovel", "ido"]) b.set(doc(db, "msgs", k), { j: "[]" });
   await b.commit();
 }
 
@@ -121,7 +121,7 @@ function listen() {
     if (d.exists()) { SEEN = { u: {}, ideas: "", msg: {}, ...JSON.parse(d.data().j) }; last.seen = J(SEEN); }
     else if (!last.seen) {
       // first visit: everything that already exists counts as read
-      const t = now(); SEEN = { u: Object.fromEntries(U.map(u => [u.code, t])), ideas: t, msg: { liam: t, yuval: t, ido: t, sharon: t } };
+      const t = now(); SEEN = { u: Object.fromEntries(U.map(u => [u.code, t])), ideas: t, msg: { liam: t, yovel: t, ido: t, sharon: t } };
       saveSeen();
     }
     got("seen");
@@ -132,7 +132,7 @@ function reset() {
   unsubs.forEach(f => f()); unsubs = [];
   for (const k of ["units", "drafts", "ideas", "msgs"]) last[k] = new Map();
   last.areas = last.sprint = last.seen = "";
-  U = []; DRAFTS = []; IDEAS = []; MSGS = { liam: [], yuval: [], ido: [] }; SEEN = { u: {}, ideas: "", msg: {} };
+  U = []; DRAFTS = []; IDEAS = []; MSGS = { liam: [], yovel: [], ido: [] }; SEEN = { u: {}, ideas: "", msg: {} };
   READY = false; me = null; openCode = null;
 }
 

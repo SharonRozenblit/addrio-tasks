@@ -267,7 +267,7 @@ export const SEED={
    "parent": "AUX",
    "title": "לפשט את הממשק לפי האפיון",
    "area": "dev",
-   "owner": "yuval",
+   "owner": "yovel",
    "start": "2026-10-29",
    "due": "2026-10-31",
    "dueType": "dep",
@@ -298,7 +298,7 @@ export const SEED={
    "areas2": [
     "mkt"
    ],
-   "owner": "yuval",
+   "owner": "yovel",
    "start": "2026-10-26",
    "due": "2026-10-29",
    "dueType": "soft",
@@ -323,7 +323,7 @@ export const SEED={
    "parent": "AUX",
    "title": "לסגור את הבאגים הפתוחים",
    "area": "dev",
-   "owner": "yuval",
+   "owner": "yovel",
    "start": "2026-10-26",
    "due": "2026-10-29",
    "dueType": "soft",
