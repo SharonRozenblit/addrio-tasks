@@ -789,8 +789,11 @@ function newUnit(prefill={}){
       <label class="fld"><span>תבנית</span><select id="n-tpl"><option>ללא</option><option>שקף במצגת</option><option>פגישה עם משקיע</option><option>קמפיין</option></select></label></div>
     <div class="fld"><span>מסלול ל-Done</span><div class="paths">${ORDER.map(s=>`<label><input type="checkbox" class="n-path" value="${s}" checked ${s==="todo"||s==="done"?"disabled":""}> ${ST[s][0]}</label>`).join("")}</div></div>
     <div class="req-note" id="nunote">יחידה בלי כל שדות החובה נשמרת כטיוטה בלבד.</div>
-  </div><div class="mf"><label class="note" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="n-sp" ${prefill.sprint===false?"":"checked"}> בספרינט הנוכחי</label><button type="button" class="btn" data-close>ביטול</button><button class="btn pri">שמירה</button></div></form>`});
+  </div><div class="mf"><label class="note" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="n-sp" ${prefill.due&&prefill.due<=SPRINT.end?"checked":""}> בספרינט הנוכחי</label><button type="button" class="btn" data-close>ביטול</button><button class="btn pri">שמירה</button></div></form>`});
   $("#n-type").onchange=e=>{const t=e.target.value;const s=$("#n-par");s.disabled=t==="epic";$("#n-code-w").hidden=t!=="epic";s.innerHTML=t==="sub"?U.filter(u=>u.type==="task").map(u=>`<option value="${u.code}">${u.code} · ${esc(u.title)}</option>`).join(""):`<option value="">בחירה</option>`+epics.map(e=>`<option value="${e.code}">${e.code} · ${esc(e.title)}</option>`).join("")};
+  $("#n-sp").onchange=e=>{e.target.dataset.touched=1};
+  const spSync=()=>{const c=$("#n-sp");if(c.dataset.touched)return;const d=$("#n-due").value;c.checked=$("#n-type").value!=="epic"&&!!d&&d<=SPRINT.end};
+  $("#n-due").addEventListener("change",spSync);$("#n-due").addEventListener("input",spSync);$("#n-type").addEventListener("change",spSync);
   $("#nuform").oninput=$("#nuform").onchange=e=>{const f=e.target.closest(".fld");if(f&&e.target.value.trim())f.classList.remove("miss");if($("#nuform").dataset.warned&&!$("#nuform .miss")){delete $("#nuform").dataset.warned;$("#nuform .mf .pri").textContent="שמירה";$("#nunote").textContent="כל שדות החובה מולאו. השמירה תפעיל את היחידה."}};
   $("#nuform").onsubmit=e=>{e.preventDefault();
     const t=$("#n-type").value;const v=id=>$(id).value.trim();
