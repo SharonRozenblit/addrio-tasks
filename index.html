@@ -802,6 +802,7 @@ function newUnit(prefill={}){
     if(miss.length){if(!$("#nuform").dataset.warned){$("#nunote").innerHTML=`חסרים: <b>${miss.join(", ")}</b>. השלימו אותם כדי להפעיל, או לחצו "שמירה כטיוטה".`;$("#nuform").dataset.warned=1;$("#nuform .mf .pri").textContent="שמירה כטיוטה";const f=$("#nuform .miss");f&&f.scrollIntoView({behavior:"smooth",block:"center"});toast(`חסרים ${miss.length} שדות חובה. הם מסומנים באדום.`);return}
       const dft={id:prefill.draftId||"D"+Date.now().toString(36),title:v("#n-title")||"ללא שם",desc:v("#n-desc"),dod:v("#n-dod"),area:$("#n-area").value,owner:v("#n-own"),due:v("#n-due"),missing:miss,from:prefill.from||null};DRAFTS=[dft,...DRAFTS.filter(x=>x.id!==dft.id)];persist();closeModal();view="drafts";render();toast("נשמר כטיוטה. אפשר להשלים אותה בלשונית טיוטות.");return}
     const par=get(v("#n-par"));const ep=t==="epic"?null:(par.type==="epic"?par:get(par.epic));
+    if(par&&par.start&&v("#n-start")<par.start){toast(`ההתחלה מוקדמת מזו של ${par.code} (${fmt(par.start)}). אפשר להקדים את ${par.code} בעריכה, או לדחות את ההתחלה כאן.`);$("#n-start").closest(".fld").classList.add("miss");return}
     if(par&&par.type!=="epic"&&v("#n-due")>par.due||t==="task"&&ep&&v("#n-due")>ep.due){toast(`הדד-ליין מאוחר מזה של ${par.code} (${fmt(par.due)}). יחידת-בת לא יכולה להסתיים אחרי האם.`);$("#n-due").closest(".fld").classList.add("miss");return}
     let cd;if(t==="epic"){cd=v("#n-code").toUpperCase();if(!/^[A-Z]{2,5}$/.test(cd)||get(cd)){$("#n-code-w").classList.add("miss");toast(get(cd)?`הקוד ${cd} כבר תפוס`:"צריך קוד באותיות לועזיות, למשל AMK");return}}else{const n=Math.max(0,...U.filter(u=>u.epic===ep.code&&u.code.includes("-")).map(u=>+u.code.split("-")[1]))+1;cd=`${ep.code}-${n}`}
     const path=[...document.querySelectorAll(".n-path")].filter(x=>x.checked).map(x=>x.value);
@@ -1002,6 +1003,10 @@ function editUnit(){
       if(!dr){$("#e-dr").closest(".fld").classList.add("miss");toast("שינוי דד-ליין דורש סיבה");return}
       const par=get(u.parent);if(par&&par.due&&nd>par.due){$("#e-due").closest(".fld").classList.add("miss");toast(`הדד-ליין של ${par.code} הוא ${fmt(par.due)}. יחידת-בת לא יכולה להסתיים אחרי האם.`);return}
     }
+    {const par=get(u.parent),st=v("#e-start");
+      if(par&&par.start&&st&&st<par.start){$("#e-start").closest(".fld").classList.add("miss");toast(`ההתחלה מוקדמת מזו של ${par.code} (${fmt(par.start)})`);return}
+      const early=U.filter(x=>x.parent===u.code&&x.start&&st&&x.start<st);
+      if(early.length){$("#e-start").closest(".fld").classList.add("miss");toast(`${early.map(x=>x.code).join(", ")} מתחילות לפני ${fmt(st)}. הקדימו את ההתחלה כאן או דחו אותן.`);return}}
     const ch=[];const set=(k,val)=>{if((u[k]||"")!==(val||"")){ch.push(k);u[k]=val}};
     if(nd!==(u.due||"")){(u.history=u.history||[]).push([now(),me,`הזיז דד-ליין ${fmt(u.due)} ← ${fmt(nd)}`,dr]);u.due=nd}
     {const ncl=clRead("e",u.checklist);if(J0(ncl)!==J0(u.checklist||null)){u.checklist=ncl;ch.push("checklist")}}
