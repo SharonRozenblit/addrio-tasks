@@ -857,7 +857,8 @@ function rerender(){const m=$("#main");if(!m)return;m.innerHTML={board:vBoard,li
 function refreshCounters(){const c=counts();const map={comments:c.nc,msgs:c.nm,ideas:c.ni,over:c.no};document.querySelectorAll(".cnt").forEach(b=>{const n=b.querySelector(".n");n.textContent=map[b.dataset.pop];n.dataset.z=map[b.dataset.pop]})}
 function setHH(){const t=$(".top");if(t)document.documentElement.style.setProperty("--hh",t.offsetHeight+"px")}
 addEventListener("resize",setHH);
-function render(){if(!me){!window.FB||FB.pending?renderLoading():renderLogin();return}if(!READY){renderLoading();return}$("#app").innerHTML=shell("");rerender();setHH();
+function render(){if(!me){!window.FB||FB.pending?renderLoading():renderLogin();return}if(!READY){renderLoading();return}const tl=$(".tabs")?.scrollLeft||0;$("#app").innerHTML=shell("");rerender();setHH();
+  {const tb=$(".tabs");if(tb){tb.scrollLeft=tl;const s=tb.querySelector('[aria-selected="true"]');if(s){const r=s.getBoundingClientRect(),R=tb.getBoundingClientRect();if(r.left<R.left||r.right>R.right)tb.scrollLeft+=r.left<R.left?r.left-R.left-24:r.right-R.right+24}}}
   if(openCode)drawDrawer();
 }
 function go(v){if(v==="more"){const p=$("#pop");if(p.classList.contains("on")&&p.classList.contains("sheet")){p.classList.remove("on");return}pop("me",document.querySelector('.bnav [data-v="more"]'));return}$("#pop").classList.remove("on");view=v;render();scrollTo(0,0)}
