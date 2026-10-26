@@ -704,7 +704,7 @@ function drawDrawer(){
       <dt>Area</dt><dd>${areaTag(u.area)}${(u.areas2||[]).map(a=>areaTag(a,1)).join("")}</dd>
       ${u.blockedBy?`<dt>Blocked by</dt><dd><a href="#" data-open="${esc(u.blockedBy)}">${code(u.blockedBy)}</a> ${esc(get(u.blockedBy)?.title||"")}</dd>`:""}
       ${!isE&&inSp(u)?`<dt>ספרינט</dt><dd>${spL()}</dd>`:""}
-      <dt>תיקיית דרייב</dt><dd>${u.drive?`<a href="${esc(u.drive)}" target="_blank" rel="noopener" style="color:var(--pink-ink);font-weight:600;text-decoration:none">📁 ${esc(u.code)} — ${esc(u.title)}</a>`:'<span style="color:var(--faint)">—</span>'}</dd>
+      <dt>תיקיית דרייב</dt><dd>${(()=>{let d=u,seen=0;while(d&&!d.drive&&seen++<5)d=get(d.parent||(d.code!==d.epic?d.epic:""));return d&&d.drive?`<a href="${esc(d.drive)}" target="_blank" rel="noopener" style="color:var(--pink-ink);font-weight:600;text-decoration:none">📁 ${esc(d.code)} — ${esc(d.title)}</a>${d!==u?' <span style="color:var(--faint);font-size:12px">(התיקייה של '+esc(d.code)+')</span>':''}`:'<span style="color:var(--faint)">—</span>'})()}</dd>
     </dl></div>
     ${u.desc?`<div class="sec"><h4>אפיון</h4><div style="font-size:14px">${esc(u.desc)}</div></div>`:""}
     <div class="sec"><h4>הגדרת סיום</h4><div class="box dod">${esc(u.dod)}</div></div>
