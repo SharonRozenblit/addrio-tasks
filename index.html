@@ -1044,9 +1044,9 @@ function resetAll(){
     persist();closeModal();closeAll();view="mine";render();toast("כל הנתונים נמחקו. אפשר להתחיל ליצור Epics")};
 }
 function exportCsv(){
-  const rows=filtered();const q=x=>`"${String(x??"").replace(/"/g,'""')}"`;
-  const head=["קוד","שם","Epic","סטטוס","מצב","עדיפות","אחראי","Area","התחלה","דד-ליין","הגדרת סיום"];
-  const lines=[head.map(q).join(","),...rows.map(u=>[u.code,u.title,u.epic,ST[u.status]?.[0],u.state?STATES[u.state][0]:"",u.prio,PEOPLE[u.owner]?.name,AREAS[u.area]?.[0],u.start,u.due,u.dod].map(q).join(","))];
+  const fr=filtered();const ep=U.filter(u=>u.type==="epic"&&(!F.epic||u.code===F.epic));const rows=[...ep,...fr];const q=x=>`"${String(x??"").replace(/"/g,'""')}"`;
+  const head=["קוד","רמה","שם","Epic","הורה","סטטוס","מצב","Blocked by","עדיפות","אחראי","Area","התחלה","דד-ליין","סוג דד-ליין","למה התאריך","בספרינט","אפיון","הגדרת סיום","תוצר סיום","רשימה"];
+  const lines=[head.map(q).join(","),...rows.map(u=>[u.code,{epic:"Epic",task:"Task",sub:"Sub-task"}[u.type],u.title,u.epic,u.parent||"",u.type==="epic"?"":ST[u.status]?.[0],u.state?STATES[u.state][0]:"",u.blockedBy||"",u.prio,PEOPLE[u.owner]?.name,AREAS[u.area]?.[0],u.start,u.due,DUE_TYPE[u.dueType]||"",u.dueWhy,inSp(u)?"כן":"",u.desc,u.dod,u.deliverable||"",u.checklist?(u.checklist.style==="steps"?"סדר פעולות: ":"צ'קליסט: ")+u.checklist.items.map(i=>(i[1]?"✓ ":"")+i[0]).join(" | "):""].map(q).join(","))];
   const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["﻿"+lines.join("\r\n")],{type:"text/csv;charset=utf-8"}));a.download=`addrio-tasks-${TODAY}.csv`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000);
   toast(`ירדו ${rows.length} שורות. הקובץ נפתח באקסל`);
 }
