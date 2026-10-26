@@ -1,0 +1,10 @@
+{
+  "name": "addrio-tasks-mcp",
+  "main": "src/index.js",
+  "compatibility_date": "2026-09-01",
+  "compatibility_flags": ["global_fetch_strictly_public"],
+  "workers_dev": true,
+  // The KV id and PUBLIC_URL are filled in by .github/workflows/connector.yml at deploy time.
+  "kv_namespaces": [{ "binding": "OAUTH_KV", "id": "__KV_ID__" }],
+  "vars": { "PUBLIC_URL": "__PUBLIC_URL__" }
+}
