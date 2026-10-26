@@ -1,6 +1,7 @@
 rules_version = '2';
 // Addrio Tasks: only the four approved Gmail accounts get in.
-// Sharon (admin) creates units, moves statuses and changes owners; everyone else reads, comments and adds ideas.
+// Admins (Sharon, Liam) create units, move statuses and change owners; everyone else reads, comments and adds ideas.
+// Personal messages are between Sharon and each person.
 service cloud.firestore {
   match /databases/{database}/documents {
     function email() {
@@ -15,7 +16,7 @@ service cloud.firestore {
       }.get(email(), '');
     }
     function member() { return who() != ''; }
-    function admin() { return who() == 'sharon'; }
+    function admin() { return who() in ['sharon', 'liam']; }
 
     match /units/{id} {
       allow read: if member();
@@ -34,7 +35,7 @@ service cloud.firestore {
       allow delete: if admin();
     }
     match /msgs/{person} {
-      allow read, write: if admin() || who() == person;
+      allow read, write: if who() == 'sharon' || who() == person;
     }
     match /meta/areas {
       allow read, write: if member();

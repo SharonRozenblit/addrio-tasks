@@ -36,7 +36,7 @@ function report(err) {
 
 function sync() {
   if (!me) return;
-  const admin = can();
+  const admin = can(), isHub = hub();
   let seq = Date.now();
   for (const [name, L] of Object.entries(LISTS)) {
     const seen = new Set();
@@ -52,7 +52,7 @@ function sync() {
     }
     if (admin) for (const id of [...last[name].keys()]) if (!seen.has(id)) { last[name].delete(id); deleteDoc(doc(db, name, id)).catch(report); }
   }
-  for (const k of (admin ? Object.keys(MSGS) : [me])) {
+  for (const k of (isHub ? Object.keys(MSGS) : [me])) {
     const j = J(MSGS[k] || []);
     if (last.msgs.get(k) === j) continue;
     last.msgs.set(k, j);
@@ -106,7 +106,7 @@ function listen() {
     }, fail(name)));
   }
   const onMsgDoc = d => { const v = d.exists() ? JSON.parse(d.data().j) : []; MSGS[d.id] = v; last.msgs.set(d.id, J(v)); };
-  if (can()) unsubs.push(onSnapshot(collection(db, "msgs"), qs => { qs.docs.forEach(onMsgDoc); got("msgs"); }, fail("msgs")));
+  if (hub()) unsubs.push(onSnapshot(collection(db, "msgs"), qs => { qs.docs.forEach(onMsgDoc); got("msgs"); }, fail("msgs")));
   else unsubs.push(onSnapshot(doc(db, "msgs", me), d => { onMsgDoc(d); got("msgs"); }, fail("msgs")));
 
   unsubs.push(onSnapshot(doc(db, "meta", "areas"), d => {

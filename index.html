@@ -425,7 +425,7 @@ const MOD=MAC?"⌃":"Alt+";
 
 const PEOPLE={
   sharon:{name:"שרון",role:"סמנכ״ל · PMO, מחקר, מודלים ומצגת",color:"#8b1e3f",admin:true,email:"s.rozenblit.office@gmail.com"},
-  liam:{name:"ליאם",role:"מנכ״לית · חווית משתמש, אפיון ושיווק לפרטיים",color:"#e64980",email:"liambengalw@gmail.com"},
+  liam:{name:"ליאם",role:"מנכ״לית · חווית משתמש, אפיון ושיווק לפרטיים",color:"#e64980",admin:true,email:"liambengalw@gmail.com"},
   yuval:{name:"יובל",role:"מהנדס תוכנה · שותף טכנולוגי",color:"#2f9e44",email:"yovelbenazaria@gmail.com"},
   ido:{name:"עידו",role:"עיצוב ו-UX",color:"#1c7ed6",email:"idobenazaria@gmail.com"}
 };
@@ -485,13 +485,14 @@ const dueH=u=>`<span class="due${isOver(u)?" over":isSoon(u)?" soon":""}">${isOv
 function epicProg(c){const d=desc(c).filter(u=>u.state!=="nr");const done=d.filter(u=>u.status==="done").length;return{done,total:d.length,pct:d.length?Math.round(done/d.length*100):0}}
 function toast(t){const el=$("#toast");el.textContent=t;el.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove("on"),2600)}
 const can=()=>me&&PEOPLE[me].admin;
+const hub=()=>me==="sharon";
 const kb=k=>`<kbd>${MOD}${k}</kbd>`;
 const now=()=>{const d=new Date();return ymd(d)+" "+d.toTimeString().slice(0,8)};
 
 /* ---------- counters ---------- */
 function counts(){
   const nc=U.reduce((n,u)=>n+(u.comments||[]).filter(c=>unreadCm(u,c)).length,0);
-  const nm=(can()?Object.keys(MSGS):[me]).filter(unreadMsg).length;
+  const nm=(hub()?Object.keys(MSGS):[me]).filter(unreadMsg).length;
   const ni=can()?IDEAS.filter(i=>i.by!==me&&(i.ts||i.at)>SEEN.ideas).length:0;
   const no=U.filter(isOver).length;
   return{nc,nm,ni,no};
@@ -661,16 +662,16 @@ function vIdeas(){
       <label class="fld" id="i-new-w" hidden><span>שם ה-Area החדש</span><input id="i-new" placeholder="מתווסף לרשימה של כולם"></label>
       <label class="fld"><span>אפיון</span><textarea id="i-d" required></textarea></label>
       <button class="btn pri" type="submit">הוספה לבנק הרעיונות</button>
-      <small style="color:var(--muted)">כל הצוות רואה ומגיב. רק שרון הופך רעיון ליחידת עבודה.</small></form></div>`;
+      <small style="color:var(--muted)">כל הצוות רואה ומגיב. רק מנהלים הופכים רעיון ליחידת עבודה.</small></form></div>`;
 }
 function vMsgs(){
-  if(!can()){chatWith=me}
-  const ppl=can()?Object.keys(MSGS):[me];
+  if(!hub()){chatWith=me}
+  const ppl=hub()?Object.keys(MSGS):[me];
   const th=MSGS[chatWith]||[];if(unreadMsg(chatWith)){SEEN.msg[chatWith]=now();markSeen();setTimeout(refreshCounters,0)}
   const linkify=t=>esc(t).replace(/\b([A-Z]{3}-\d+)\b/g,(m)=>get(m)?`<a href="#" data-open="${m}">${m}</a>`:m);
-  return `<div class="chat"><div class="people">${ppl.map(k=>`<button data-chat="${k}" aria-current="${k===chatWith}">${av(can()?k:"sharon")}<div><b>${can()?PEOPLE[k].name:"שרון"}</b>${unreadMsg(k)?' <span class="unseen"></span>':""}<small>${esc(((MSGS[k]||[]).at(-1)||[,,"אין הודעות עדיין"])[2]).slice(0,34)}</small></div></button>`).join("")}</div>
+  return `<div class="chat"><div class="people">${ppl.map(k=>`<button data-chat="${k}" aria-current="${k===chatWith}">${av(hub()?k:"sharon")}<div><b>${hub()?PEOPLE[k].name:"שרון"}</b>${unreadMsg(k)?' <span class="unseen"></span>':""}<small>${esc(((MSGS[k]||[]).at(-1)||[,,"אין הודעות עדיין"])[2]).slice(0,34)}</small></div></button>`).join("")}</div>
     <div class="thread"><div class="msgs">${th.map(m=>`<div class="bub${m[0]===me?" mine":""}"><small>${PEOPLE[m[0]]?.name||""} · ${fmt(m[1].slice(0,10))} ${m[1].slice(11,16)}</small>${linkify(m[2])}</div>`).join("")||'<div class="empty">אין הודעות. אפשר לקשר יחידה על ידי כתיבת הקוד שלה, למשל AUX-2.</div>'}</div>
-    <form class="compose" id="compose"><input id="msgin" placeholder="הודעה ${can()?"ל"+PEOPLE[chatWith].name:"לשרון"} · קוד יחידה הופך לקישור"><button class="btn pri">שליחה</button></form></div></div>`;
+    <form class="compose" id="compose"><input id="msgin" placeholder="הודעה ${hub()?"ל"+PEOPLE[chatWith].name:"לשרון"} · קוד יחידה הופך לקישור"><button class="btn pri">שליחה</button></form></div></div>`;
 }
 
 /* ---------- drawer ---------- */
@@ -718,7 +719,7 @@ function drawDrawer(){
     </div></div>
     <div class="sec"><h4>תגובות</h4>${(u.comments||[]).map(c=>`<div class="cm">${av(c[0],1)}<div class="b"><small>${PEOPLE[c[0]]?.name||""} · ${fmt(c[1].slice(0,10))} ${c[1].slice(11,16)}</small><p>${esc(c[2])}</p></div></div>`).join("")||'<div style="color:var(--faint);font-size:13px">אין תגובות</div>'}
       <form class="addc" id="addc"><input id="cin" placeholder="הוספת תגובה (${MOD}M)"><button class="btn">שליחה</button></form></div>
-    <div class="sec"><h4>היסטוריית שינויים</h4><ul class="hist">${(u.history||[]).slice().reverse().map(h=>`<li>${fmt(h[0].slice(0,10))} · <b>${PEOPLE[h[1]]?.name||""}</b> ${esc(h[2])}${h[3]?`<span class="why">סיבה: ${esc(h[3])}</span>`:""}</li>`).join("")}<li>${fmt((u.created||u.start||"").slice(0,10))} · <b>שרון</b> יצר/ה את היחידה</li></ul></div>
+    <div class="sec"><h4>היסטוריית שינויים</h4><ul class="hist">${(u.history||[]).slice().reverse().map(h=>`<li>${fmt(h[0].slice(0,10))} · <b>${PEOPLE[h[1]]?.name||""}</b> ${esc(h[2])}${h[3]?`<span class="why">סיבה: ${esc(h[3])}</span>`:""}</li>`).join("")}<li>${fmt((u.created||u.start||"").slice(0,10))} · <b>${PEOPLE[u.by]?.name||"שרון"}</b> יצר/ה את היחידה</li></ul></div>
   </div>`;
 }
 
@@ -756,19 +757,19 @@ function picker(kind){
 }
 function pick(v){const u=get(openCode),k=$("#modal").dataset.kind;const old=k==="prio"?u.prio:PEOPLE[u.owner].name;if(k==="prio")u.prio=v;else u.owner=v;(u.history=u.history||[]).push([now(),me,`שינה ${k==="prio"?"עדיפות":"אחראי"}: ${old} ← ${k==="prio"?v:PEOPLE[v].name}`,""]);persist();closeModal();drawDrawer();rerender()}
 function nextStatus(){
-  const u=get(openCode);if(!u||u.type==="epic")return;if(!can()){toast("רק שרון מזיז סטטוסים");return}
+  const u=get(openCode);if(!u||u.type==="epic")return;if(!can()){toast("רק מנהלים מזיזים סטטוסים");return}
   const path=u.path||ORDER;const i=path.indexOf(u.status);if(i>=path.length-1){toast("היחידה כבר ב-Done");return}
   setStatus(u,path[i+1]);
 }
 function setStatus(u,s){
-  if(!can()){toast("רק שרון מזיז סטטוסים. אפשר לקבל הרשאה ייעודית בהגדרות.");return false}
+  if(!can()){toast("רק מנהלים (שרון וליאם) מזיזים סטטוסים");return false}
   if(!(u.path||ORDER).includes(s)){toast(`${ST[s][0]} לא במסלול של ${u.code}. אפשר לשנות את המסלול בעריכה.`);return false}
   if(s==="done"){const open=kids(u.code).filter(k=>k.status!=="done"&&k.state!=="nr");if(open.length){toast(`אי אפשר לסגור: ${open.map(k=>k.code).join(", ")} עדיין פתוחות. סגרו, סמנו Not Relevant או העבירו להורה אחר.`);return false}}
   (u.history=u.history||[]).push([now(),me,`העביר סטטוס ${ST[u.status][0]} ← ${ST[s][0]}`,""]);u.status=s;if(s==="done"&&u.state==="block")u.state=null;
   persist();rerender();if(openCode===u.code)drawDrawer();toast(`${u.code} עבר ל-${ST[s][0]}`);return true;
 }
 function newUnit(prefill={}){
-  if(!can()){toast("רק שרון יוצר יחידות עבודה");return}
+  if(!can()){toast("רק מנהלים יוצרים יחידות עבודה");return}
   const epics=U.filter(u=>u.type==="epic");
   modal({h:`<div class="mh"><h3>${prefill.title?"השלמת טיוטה":"יחידה חדשה"}</h3><span class="due">שדות חובה מסומנים ב-<em style="color:var(--pink-ink);font-style:normal">*</em></span></div>
   <form id="nuform" novalidate><div class="mb">
@@ -800,9 +801,9 @@ function newUnit(prefill={}){
     if(par&&par.type!=="epic"&&v("#n-due")>par.due||t==="task"&&ep&&v("#n-due")>ep.due){toast(`הדד-ליין מאוחר מזה של ${par.code} (${fmt(par.due)}). יחידת-בת לא יכולה להסתיים אחרי האם.`);$("#n-due").closest(".fld").classList.add("miss");return}
     let cd;if(t==="epic"){cd=v("#n-code").toUpperCase();if(!/^[A-Z]{2,5}$/.test(cd)||get(cd)){$("#n-code-w").classList.add("miss");toast(get(cd)?`הקוד ${cd} כבר תפוס`:"צריך קוד באותיות לועזיות, למשל AMK");return}}else{const n=Math.max(0,...U.filter(u=>u.epic===ep.code&&u.code.includes("-")).map(u=>+u.code.split("-")[1]))+1;cd=`${ep.code}-${n}`}
     const path=[...document.querySelectorAll(".n-path")].filter(x=>x.checked).map(x=>x.value);
-    U.push({code:cd,type:t,epic:ep?ep.code:cd,parent:par?par.code:null,title:v("#n-title"),desc:v("#n-desc"),dod:v("#n-dod"),owner:v("#n-own"),prio:v("#n-prio"),start:v("#n-start"),due:v("#n-due"),dueType:$("#n-dt").value||"soft",dueWhy:v("#n-dw"),area:$("#n-area").value,status:"todo",path,deliverable:t==="epic"?v("#n-dod"):"",sprint:t!=="epic"&&$("#n-sp").checked?SPRINT.n:0,created:now(),comments:[],history:[]});
+    U.push({code:cd,type:t,epic:ep?ep.code:cd,parent:par?par.code:null,title:v("#n-title"),desc:v("#n-desc"),dod:v("#n-dod"),owner:v("#n-own"),prio:v("#n-prio"),start:v("#n-start"),due:v("#n-due"),dueType:$("#n-dt").value||"soft",dueWhy:v("#n-dw"),area:$("#n-area").value,status:"todo",path,deliverable:t==="epic"?v("#n-dod"):"",sprint:t!=="epic"&&$("#n-sp").checked?SPRINT.n:0,created:now(),by:me,comments:[],history:[]});
     if(prefill.draftId)DRAFTS=DRAFTS.filter(x=>x.id!==prefill.draftId);
-    if(prefill.from){const i=IDEAS.find(x=>x.id===prefill.from);if(i){i.status="ok";i.comments.push(["sharon",`אושר: נפתחה יחידה ${cd}.`])}}
+    if(prefill.from){const i=IDEAS.find(x=>x.id===prefill.from);if(i){i.status="ok";i.comments.push([me,`אושר: נפתחה יחידה ${cd}.`])}}
     persist();closeModal();rerender();toast(`${cd} נוצרה`);openUnit(cd)};
 }
 function closeSprint(){
@@ -833,7 +834,7 @@ function pop(kind,anchor){
   const r=anchor.getBoundingClientRect();const el=$("#pop");
   let h="";
   if(kind==="comments"){const l=U.flatMap(u=>(u.comments||[]).map(c=>[u,c])).sort((a,b)=>b[1][1].localeCompare(a[1][1])).slice(0,30);h=`<h4>💬 תגובות אחרונות</h4>${l.map(([u,c])=>`<button class="it" data-open="${u.code}">${av(c[0],1)}<div>${unreadCm(u,c)?'<span class="unseen"></span> ':""}<b>${PEOPLE[c[0]].name}</b> על ${code(u.code)}<small>${esc(c[2]).slice(0,80)}</small></div></button>`).join("")}`}
-  if(kind==="msgs"){h=`<h4>✉️ הודעות אישיות</h4>${(can()?Object.keys(MSGS):[me]).filter(k=>(MSGS[k]||[]).length).map(k=>`<button class="it" data-gochat="${k}">${av(k,1)}<div>${unreadMsg(k)?'<span class="unseen"></span> ':""}<b>${can()?PEOPLE[k].name:"שרון"}</b><small>${esc(MSGS[k].at(-1)[2]).slice(0,70)}</small></div></button>`).join("")}`}
+  if(kind==="msgs"){h=`<h4>✉️ הודעות אישיות</h4>${(hub()?Object.keys(MSGS):[me]).filter(k=>(MSGS[k]||[]).length).map(k=>`<button class="it" data-gochat="${k}">${av(k,1)}<div>${unreadMsg(k)?'<span class="unseen"></span> ':""}<b>${hub()?PEOPLE[k].name:"שרון"}</b><small>${esc(MSGS[k].at(-1)[2]).slice(0,70)}</small></div></button>`).join("")}`}
   if(kind==="ideas"){h=`<h4>💡 רעיונות</h4>${IDEAS.map(i=>`<button class="it" data-goidea="1">${av(i.by,1)}<div>${can()&&i.by!==me&&(i.ts||i.at)>SEEN.ideas?'<span class="unseen"></span> ':""}<b>${esc(i.title)}</b><small>${PEOPLE[i.by]?.name||""} · ${fmt(i.at)}</small></div></button>`).join("")}`}
   if(kind==="over"){h=`<h4>⚠️ חריגות: דד-ליין שעבר</h4>${U.filter(isOver).map(u=>`<button class="it" data-open="${u.code}">${av(u.owner,1)}<div><b>${esc(u.title)}</b><small>${code(u.code)} · היה אמור להסתיים ב-${fmt(u.due)} · ${days(u.due,TODAY)} ימים באיחור</small></div></button>`).join("")||'<div class="empty">אין חריגות</div>'}`}
   if(kind==="me"){h=`${anchor.closest(".bnav")?`<h4>מסכים</h4>${VIEWS.filter(v=>!["mine","board","list","ideas"].includes(v[0])).map(([k,l])=>`<button class="it" data-v="${k}"><span>${{timeline:"▤",dash:"◔",mine:"◉",team:"👥",sprint:"🏁",drafts:"📝",msgs:"✉️"}[k]}</span><div><b>${l}</b></div></button>`).join("")}`:""}<h4>החשבון שלי</h4><div class="it" style="cursor:default">${av(me,1)}<div><b>${PEOPLE[me].name}${PEOPLE[me].admin?' <span class="adm">מנהל</span>':""}</b><small dir="ltr" style="text-align:end">${esc(PEOPLE[me].email)}</small></div></div><button class="it" data-present="1"><span style="font-size:18px">📺</span><div><b>מצב הצגה לטלוויזיה</b><small>${MOD}. להפעלה ולכיבוי</small></div></button><button class="it" data-help="1"><kbd>?</kbd><div><b>קיצורי מקלדת</b></div></button><button class="it" data-logout="1"><span>↩</span><div><b>יציאה</b></div></button>`}
@@ -900,7 +901,7 @@ function ideaAct(a,id){
   const i=IDEAS.find(x=>x.id===id);
   if(a==="open"){i.status="rev";persist();rerender();toast("הרעיון עבר לבחינה")}
   if(a==="wait"){i.status="new";persist();rerender();toast("הרעיון חזר להמתנה")}
-  if(a==="draft"){DRAFTS.unshift({id:"D"+Date.now().toString(36),title:i.title,desc:i.desc,area:i.sector,owner:"",due:"",missing:["אחראי","דד-ליין","מהות הדד-ליין","שיוך ל-Epic","הגדרת סיום"],from:i.id});i.comments.push(["sharon","הומר לטיוטה."]);persist();rerender();toast("נוצרה טיוטה. הרעיון נשאר בבחינה עד שהטיוטה תופעל.")}
+  if(a==="draft"){DRAFTS.unshift({id:"D"+Date.now().toString(36),title:i.title,desc:i.desc,area:i.sector,owner:"",due:"",missing:["אחראי","דד-ליין","מהות הדד-ליין","שיוך ל-Epic","הגדרת סיום"],from:i.id});i.comments.push([me,"הומר לטיוטה."]);persist();rerender();toast("נוצרה טיוטה. הרעיון נשאר בבחינה עד שהטיוטה תופעל.")}
   if(a==="no"){modal({sm:1,h:`<div class="mh"><h3>דחיית רעיון</h3></div><form id="rej"><div class="mb"><label class="fld"><span>סיבה <em>(חובה)</em></span><textarea id="rr" placeholder="מי שהציע יראה את הסיבה"></textarea></label></div><div class="mf"><button type="button" class="btn" data-close>ביטול</button><button class="btn danger">דחייה</button></div></form>`});
     $("#rej").onsubmit=e=>{e.preventDefault();const r=$("#rr").value.trim();if(!r){$("#rr").closest(".fld").classList.add("miss");toast("אי אפשר לדחות בלי סיבה");return}i.status="no";i.reason=r;persist();closeModal();rerender();toast("הרעיון נדחה ונשמר עם הסיבה")}}
   if(a==="cm"){modal({sm:1,h:`<div class="mh"><h3>תגובה על הרעיון</h3></div><form id="icf"><div class="mb"><label class="fld"><span>${esc(i.title)}</span><textarea id="ic"></textarea></label></div><div class="mf"><button type="button" class="btn" data-close>ביטול</button><button class="btn pri">שליחה</button></div></form>`});
@@ -909,7 +910,7 @@ function ideaAct(a,id){
 document.addEventListener("submit",e=>{
   if(e.target.id==="addc"){e.preventDefault();const v=$("#cin").value.trim();if(!v)return;const u=get(openCode);(u.comments=u.comments||[]).push([me,now(),v]);SEEN.u[u.code]=now();markSeen();persist();drawDrawer();toast("התגובה נוספה ומסומנת כחדשה אצל שאר הצוות")}
   if(e.target.id==="compose"){e.preventDefault();const v=$("#msgin").value.trim();if(!v)return;(MSGS[chatWith]=MSGS[chatWith]||[]).push([me,now(),v]);SEEN.msg[chatWith]=now();markSeen();persist();rerender()}
-  if(e.target.id==="ideaform"){e.preventDefault();const t=$("#i-t").value.trim(),d=$("#i-d").value.trim();let s=$("#i-s").value;if(s==="__new"){const n=$("#i-new").value.trim();s=n?addArea(n):""}if(!t||!s||!d){toast("צריך את שלושת השדות");return}IDEAS.unshift({id:"IDEA-"+(Math.max(0,...IDEAS.map(x=>+String(x.id).split("-")[1]||0))+1),title:t,sector:s,desc:d,by:me,at:TODAY,ts:now(),status:"new",comments:[]});persist();rerender();toast("הרעיון נוסף. שרון יראה אותו במונה 💡")}
+  if(e.target.id==="ideaform"){e.preventDefault();const t=$("#i-t").value.trim(),d=$("#i-d").value.trim();let s=$("#i-s").value;if(s==="__new"){const n=$("#i-new").value.trim();s=n?addArea(n):""}if(!t||!s||!d){toast("צריך את שלושת השדות");return}IDEAS.unshift({id:"IDEA-"+(Math.max(0,...IDEAS.map(x=>+String(x.id).split("-")[1]||0))+1),title:t,sector:s,desc:d,by:me,at:TODAY,ts:now(),status:"new",comments:[]});persist();rerender();toast("הרעיון נוסף. המנהלים יראו אותו במונה 💡")}
 });
 document.addEventListener("change",e=>{
   const t=e.target;
@@ -949,7 +950,7 @@ function togglePresent(){document.body.classList.toggle("present");toast(documen
 
 /* drag & drop on the board */
 let dragCode=null;
-document.addEventListener("dragstart",e=>{const c=e.target.closest&&e.target.closest(".card");if(!c)return;if(!can()){e.preventDefault();toast("רק שרון מזיז יחידות");return}dragCode=c.dataset.open;c.classList.add("dragging");e.dataTransfer.effectAllowed="move"});
+document.addEventListener("dragstart",e=>{const c=e.target.closest&&e.target.closest(".card");if(!c)return;if(!can()){e.preventDefault();toast("רק מנהלים מזיזים יחידות");return}dragCode=c.dataset.open;c.classList.add("dragging");e.dataTransfer.effectAllowed="move"});
 document.addEventListener("dragend",e=>{document.querySelectorAll(".dragging,.drop").forEach(x=>x.classList.remove("dragging","drop"))});
 document.addEventListener("dragover",e=>{const col=e.target.closest&&e.target.closest(".col");if(col&&dragCode){e.preventDefault();document.querySelectorAll(".drop").forEach(x=>x!==col&&x.classList.remove("drop"));col.classList.add("drop")}});
 document.addEventListener("drop",e=>{const col=e.target.closest&&e.target.closest(".col");if(!col||!dragCode)return;e.preventDefault();const u=get(dragCode);dragCode=null;col.classList.remove("drop");if(u.status!==col.dataset.col)setStatus(u,col.dataset.col)});
