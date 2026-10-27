@@ -315,6 +315,7 @@ ol.chk{counter-reset:s} ol.chk li{counter-increment:s} ol.chk label::before{cont
 .links ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:4px}
 .links a{color:var(--fg);text-decoration:none;font-size:14px;display:flex;gap:6px;align-items:center}
 .links a:hover{color:var(--pink-ink)}
+.links li{display:flex;align-items:center;gap:4px;flex-wrap:wrap}.links li a{flex:1;min-width:0}.links li .btn{min-width:0;width:auto}
 .links .lt{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:4px}
 .cm{display:flex;gap:10px}
 .cm .b{flex:1;min-width:0}
@@ -714,8 +715,8 @@ function drawDrawer(){
       <div class="legend" style="margin-bottom:8px">התפלגות אחריות: ${distr.map(([k,n])=>`<span>${av(k,1)} ${PEOPLE[k].name} ${n}</span>`).join("")}</div>
       <div class="mini">${all.map(mini).join("")}</div></div>`:""}
     <div class="sec"><h4>קישורים${can()||u.owner===me?`<span class="sp"></span><button class="btn ghost" id="addlink" style="font-size:12px">+ קישור</button>`:""}</h4><div class="links">
-      <div><div class="lt">מקורות · מה היחידה מתבססת עליו</div><ul>${(u.sources||[]).map(s=>`<li><a href="${esc(s[1])}" target="_blank" rel="noopener">↗ ${esc(s[0])}</a></li>`).join("")||'<li style="color:var(--faint);font-size:13px">אין עדיין</li>'}</ul></div>
-      <div><div class="lt">תוצרים · מה היחידה יצרה</div><ul>${(u.outputs||[]).map(s=>`<li><a href="${esc(s[1])}" target="_blank" rel="noopener">✓ ${esc(s[0])}</a></li>`).join("")||'<li style="color:var(--faint);font-size:13px">אין עדיין</li>'}</ul></div>
+      <div><div class="lt">מקורות · מה היחידה מתבססת עליו</div><ul>${(u.sources||[]).map((s,i)=>`<li><a href="${esc(s[1])}" target="_blank" rel="noopener">↗ ${esc(s[0])}</a>${lkBtns("sources",i)}</li>`).join("")||'<li style="color:var(--faint);font-size:13px">אין עדיין</li>'}</ul></div>
+      <div><div class="lt">תוצרים · מה היחידה יצרה</div><ul>${(u.outputs||[]).map((s,i)=>`<li><a href="${esc(s[1])}" target="_blank" rel="noopener">✓ ${esc(s[0])}</a>${lkBtns("outputs",i)}</li>`).join("")||'<li style="color:var(--faint);font-size:13px">אין עדיין</li>'}</ul></div>
     </div></div>
     <div class="sec"><h4>תגובות</h4>${(u.comments||[]).map(c=>`<div class="cm">${av(c[0],1)}<div class="b"><small>${PEOPLE[c[0]]?.name||""} · ${fmt(c[1].slice(0,10))} ${c[1].slice(11,16)}</small><p>${esc(c[2])}</p></div></div>`).join("")||'<div style="color:var(--faint);font-size:13px">אין תגובות</div>'}
       <form class="addc" id="addc"><input id="cin" placeholder="הוספת תגובה (${MOD}M)"><button class="btn">שליחה</button></form></div>
@@ -884,6 +885,7 @@ document.addEventListener("click",e=>{
   if(t.closest("#mvd")){moveDeadline();return}
   if(t.closest("#edu")){editUnit();return}
   if(t.closest("#addlink")){addLink();return}
+  if(t.closest("[data-lk]")){linkAct(t.closest("[data-lk]").dataset.lk);return}
   if(t.closest("#editgoal")){editGoal();return}
   if(t.closest("#prb")){picker("prio");return}
   if(t.closest("#asg")){picker("own");return}
@@ -1018,6 +1020,18 @@ function editUnit(){
       const spv=$("#e-sp").checked?SPRINT.n:0;if((inSp(u)?SPRINT.n:0)!==spv){u.sprint=spv;ch.push("sprint")}}
     if(ch.length)(u.history=u.history||[]).push([now(),me,"ערך את היחידה ("+ch.length+" שדות)",""]);
     persist();closeModal();drawDrawer();rerender();toast(ch.length?"נשמר":"לא היה שינוי")};
+}
+function lkBtns(k,i){
+  const u=get(openCode);if(!u||!(can()||u.owner===me))return"";
+  const b='style="font-size:11px;padding:2px 7px;min-height:0"';
+  return `<button class="btn ghost" ${b} data-lk="mv:${k}:${i}" title="${k==="sources"?"העברה לתוצרים":"העברה למקורות"}">${k==="sources"?"← לתוצר":"← למקור"}</button><button class="btn ghost" ${b} data-lk="rm:${k}:${i}" title="הסרה" aria-label="הסרה">✕</button>`;
+}
+function linkAct(spec){
+  const u=get(openCode);if(!u||!(can()||u.owner===me))return;
+  const [a,k,i]=spec.split(":"),list=u[k]||[],it=list[+i];if(!it)return;
+  if(a==="rm"){if(!confirm(`להסיר את "${it[0]}"?`))return;list.splice(+i,1);toast("הקישור הוסר")}
+  else{const o=k==="sources"?"outputs":"sources";list.splice(+i,1);(u[o]=u[o]||[]).push(it);toast(o==="outputs"?"הועבר לתוצרים":"הועבר למקורות")}
+  persist();drawDrawer();
 }
 function addLink(){
   const u=get(openCode);if(!u)return;
