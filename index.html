@@ -645,7 +645,7 @@ function vDrafts(){
 }
 function vIdeas(){
   const lab={new:["חדש / בהמתנה","i-new"],rev:["בבחינה","i-rev"],ok:["אושר","i-ok"],no:["נדחה","i-no"]};
-  if(IDEAS.some(i=>i.status==="ok")){IDEAS=IDEAS.filter(i=>i.status!=="ok");if(can())setTimeout(persist,0)}
+  {const gone=i=>i.status==="ok"||DRAFTS.some(d=>d.from===i.id);if(IDEAS.some(gone)){IDEAS.forEach(i=>{const d=DRAFTS.find(d=>d.from===i.id);if(d&&!d.idea)d.idea=JSON.parse(JSON.stringify(i))});IDEAS=IDEAS.filter(i=>!gone(i));if(can())setTimeout(persist,0)}}
   if(ideaTab==="ok")ideaTab="all";
   const list=IDEAS.filter(i=>(ideaTab==="all"||i.status===ideaTab)&&(!ideaSector||i.sector===ideaSector));
   return `<div class="two"><div style="display:flex;flex-direction:column;gap:12px">
@@ -811,7 +811,7 @@ function newUnit(prefill={}){
     const path=[...document.querySelectorAll(".n-path")].filter(x=>x.checked).map(x=>x.value);
     U.push({code:cd,type:t,epic:ep?ep.code:cd,parent:par?par.code:null,title:v("#n-title"),desc:v("#n-desc"),dod:v("#n-dod"),owner:v("#n-own"),prio:v("#n-prio"),start:v("#n-start"),due:v("#n-due"),dueType:$("#n-dt").value||"soft",dueWhy:v("#n-dw"),area:$("#n-area").value,status:"todo",path,deliverable:t==="epic"?v("#n-dod"):"",sprint:t!=="epic"&&$("#n-sp").checked?SPRINT.n:0,created:now(),by:me,checklist:clRead("n"),comments:[],history:[]});
     if(prefill.draftId)DRAFTS=DRAFTS.filter(x=>x.id!==prefill.draftId);
-    if(prefill.from){const i=IDEAS.find(x=>x.id===prefill.from),nu=get(cd);if(i&&nu){const t=now();
+    if(prefill.from){const i=IDEAS.find(x=>x.id===prefill.from)||prefill.idea,nu=get(cd);if(i&&nu){const t=now();
       nu.comments=[[i.by||me,i.ts||i.at||t,`נפתחה מרעיון ${i.id}: ${i.title}${i.desc?"\n"+i.desc:""}`],...(i.comments||[]).map(c=>c.length>2?c:[c[0],t,c[1]])];
       IDEAS=IDEAS.filter(x=>x.id!==i.id)}}
     persist();closeModal();rerender();toast(`${cd} נוצרה`);openUnit(cd)};
@@ -914,7 +914,7 @@ function ideaAct(a,id){
   const i=IDEAS.find(x=>x.id===id);
   if(a==="open"){i.status="rev";persist();rerender();toast("הרעיון עבר לבחינה")}
   if(a==="wait"){i.status="new";persist();rerender();toast("הרעיון חזר להמתנה")}
-  if(a==="draft"){DRAFTS.unshift({id:"D"+Date.now().toString(36),title:i.title,desc:i.desc,area:i.sector,owner:"",due:"",missing:["אחראי","דד-ליין","מהות הדד-ליין","שיוך ל-Epic","הגדרת סיום"],from:i.id});i.comments.push([me,"הומר לטיוטה."]);persist();rerender();toast("נוצרה טיוטה. הרעיון נשאר בבחינה עד שהטיוטה תופעל.")}
+  if(a==="draft"){DRAFTS.unshift({id:"D"+Date.now().toString(36),title:i.title,desc:i.desc,area:i.sector,owner:"",due:"",missing:["אחראי","דד-ליין","מהות הדד-ליין","שיוך ל-Epic","הגדרת סיום"],from:i.id,idea:{...i,comments:[...(i.comments||[]),[me,"הומר לטיוטה."]]}});IDEAS=IDEAS.filter(x=>x.id!==i.id);persist();rerender();toast("נוצרה טיוטה והרעיון עבר ללשונית הטיוטות")}
   if(a==="no"){modal({sm:1,h:`<div class="mh"><h3>דחיית רעיון</h3></div><form id="rej"><div class="mb"><label class="fld"><span>סיבה <em>(חובה)</em></span><textarea id="rr" placeholder="מי שהציע יראה את הסיבה"></textarea></label></div><div class="mf"><button type="button" class="btn" data-close>ביטול</button><button class="btn danger">דחייה</button></div></form>`});
     $("#rej").onsubmit=e=>{e.preventDefault();const r=$("#rr").value.trim();if(!r){$("#rr").closest(".fld").classList.add("miss");toast("אי אפשר לדחות בלי סיבה");return}i.status="no";i.reason=r;persist();closeModal();rerender();toast("הרעיון נדחה ונשמר עם הסיבה")}}
   if(a==="cm"){modal({sm:1,h:`<div class="mh"><h3>תגובה על הרעיון</h3></div><form id="icf"><div class="mb"><label class="fld"><span>${esc(i.title)}</span><textarea id="ic"></textarea></label></div><div class="mf"><button type="button" class="btn" data-close>ביטול</button><button class="btn pri">שליחה</button></div></form>`});
@@ -923,7 +923,7 @@ function ideaAct(a,id){
 document.addEventListener("submit",e=>{
   if(e.target.id==="addc"){e.preventDefault();const v=$("#cin").value.trim();if(!v)return;const u=get(openCode);(u.comments=u.comments||[]).push([me,now(),v]);SEEN.u[u.code]=now();markSeen();persist();drawDrawer();toast("התגובה נוספה ומסומנת כחדשה אצל שאר הצוות")}
   if(e.target.id==="compose"){e.preventDefault();const v=$("#msgin").value.trim();if(!v)return;(MSGS[chatWith]=MSGS[chatWith]||[]).push([me,now(),v]);SEEN.msg[chatWith]=now();markSeen();persist();rerender()}
-  if(e.target.id==="ideaform"){e.preventDefault();const t=$("#i-t").value.trim(),d=$("#i-d").value.trim();let s=$("#i-s").value;if(s==="__new"){const n=$("#i-new").value.trim();s=n?addArea(n):""}if(!t||!s||!d){toast("צריך את שלושת השדות");return}IDEAS.unshift({id:"IDEA-"+(Math.max(0,...IDEAS.map(x=>+String(x.id).split("-")[1]||0),...U.flatMap(u=>(u.comments||[]).map(c=>+((String(c[2]).match(/^נפתחה מרעיון IDEA-(\d+)/)||[])[1]||0))))+1),title:t,sector:s,desc:d,by:me,at:TODAY,ts:now(),status:"new",comments:[]});persist();rerender();toast("הרעיון נוסף. המנהלים יראו אותו במונה 💡")}
+  if(e.target.id==="ideaform"){e.preventDefault();const t=$("#i-t").value.trim(),d=$("#i-d").value.trim();let s=$("#i-s").value;if(s==="__new"){const n=$("#i-new").value.trim();s=n?addArea(n):""}if(!t||!s||!d){toast("צריך את שלושת השדות");return}IDEAS.unshift({id:"IDEA-"+(Math.max(0,...IDEAS.map(x=>+String(x.id).split("-")[1]||0),...DRAFTS.map(d=>+String(d.from||"").split("-")[1]||0),...U.flatMap(u=>(u.comments||[]).map(c=>+((String(c[2]).match(/^נפתחה מרעיון IDEA-(\d+)/)||[])[1]||0))))+1),title:t,sector:s,desc:d,by:me,at:TODAY,ts:now(),status:"new",comments:[]});persist();rerender();toast("הרעיון נוסף. המנהלים יראו אותו במונה 💡")}
 });
 document.addEventListener("change",e=>{
   const t=e.target;
