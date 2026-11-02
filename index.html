@@ -645,9 +645,11 @@ function vDrafts(){
 }
 function vIdeas(){
   const lab={new:["חדש / בהמתנה","i-new"],rev:["בבחינה","i-rev"],ok:["אושר","i-ok"],no:["נדחה","i-no"]};
+  if(IDEAS.some(i=>i.status==="ok")){IDEAS=IDEAS.filter(i=>i.status!=="ok");if(can())setTimeout(persist,0)}
+  if(ideaTab==="ok")ideaTab="all";
   const list=IDEAS.filter(i=>(ideaTab==="all"||i.status===ideaTab)&&(!ideaSector||i.sector===ideaSector));
   return `<div class="two"><div style="display:flex;flex-direction:column;gap:12px">
-    <div class="filters">${[["all","הכול"],["new","חדשים"],["rev","בבחינה"],["ok","אושרו"],["no","נדחו"]].map(([k,t])=>`<button class="btn${ideaTab===k?" pri":""}" data-itab="${k}">${t}</button>`).join("")}<label style="margin-inline-start:auto">Area<select id="i-sf"><option value="">הכול</option>${Object.entries(AREAS).map(([k,a])=>`<option value="${k}"${ideaSector===k?" selected":""}>${esc(a[0])}</option>`).join("")}</select></label></div>
+    <div class="filters">${[["all","הכול"],["new","חדשים"],["rev","בבחינה"],["no","נדחו"]].map(([k,t])=>`<button class="btn${ideaTab===k?" pri":""}" data-itab="${k}">${t}</button>`).join("")}<label style="margin-inline-start:auto">Area<select id="i-sf"><option value="">הכול</option>${Object.entries(AREAS).map(([k,a])=>`<option value="${k}"${ideaSector===k?" selected":""}>${esc(a[0])}</option>`).join("")}</select></label></div>
     ${list.map(i=>`<article class="idea"><h4>${can()&&i.by!==me&&(i.ts||i.at)>SEEN.ideas?'<span class="unseen" title="לא נצפה"></span>':""}${code(i.id)} ${esc(i.title)} <span class="istat ${lab[i.status][1]}">${lab[i.status][0]}</span></h4>
       <div class="meta"><span>Area: ${areaTag(i.sector)}</span><span>הציע/ה: ${PEOPLE[i.by].name}</span><span>${fmt(i.at)}</span></div>
       <div>${esc(i.desc)}</div>
@@ -809,7 +811,9 @@ function newUnit(prefill={}){
     const path=[...document.querySelectorAll(".n-path")].filter(x=>x.checked).map(x=>x.value);
     U.push({code:cd,type:t,epic:ep?ep.code:cd,parent:par?par.code:null,title:v("#n-title"),desc:v("#n-desc"),dod:v("#n-dod"),owner:v("#n-own"),prio:v("#n-prio"),start:v("#n-start"),due:v("#n-due"),dueType:$("#n-dt").value||"soft",dueWhy:v("#n-dw"),area:$("#n-area").value,status:"todo",path,deliverable:t==="epic"?v("#n-dod"):"",sprint:t!=="epic"&&$("#n-sp").checked?SPRINT.n:0,created:now(),by:me,checklist:clRead("n"),comments:[],history:[]});
     if(prefill.draftId)DRAFTS=DRAFTS.filter(x=>x.id!==prefill.draftId);
-    if(prefill.from){const i=IDEAS.find(x=>x.id===prefill.from);if(i){i.status="ok";i.comments.push([me,`אושר: נפתחה יחידה ${cd}.`])}}
+    if(prefill.from){const i=IDEAS.find(x=>x.id===prefill.from),nu=get(cd);if(i&&nu){const t=now();
+      nu.comments=[[i.by||me,i.ts||i.at||t,`נפתחה מרעיון ${i.id}: ${i.title}${i.desc?"\n"+i.desc:""}`],...(i.comments||[]).map(c=>c.length>2?c:[c[0],t,c[1]])];
+      IDEAS=IDEAS.filter(x=>x.id!==i.id)}}
     persist();closeModal();rerender();toast(`${cd} נוצרה`);openUnit(cd)};
 }
 function closeSprint(){
@@ -919,7 +923,7 @@ function ideaAct(a,id){
 document.addEventListener("submit",e=>{
   if(e.target.id==="addc"){e.preventDefault();const v=$("#cin").value.trim();if(!v)return;const u=get(openCode);(u.comments=u.comments||[]).push([me,now(),v]);SEEN.u[u.code]=now();markSeen();persist();drawDrawer();toast("התגובה נוספה ומסומנת כחדשה אצל שאר הצוות")}
   if(e.target.id==="compose"){e.preventDefault();const v=$("#msgin").value.trim();if(!v)return;(MSGS[chatWith]=MSGS[chatWith]||[]).push([me,now(),v]);SEEN.msg[chatWith]=now();markSeen();persist();rerender()}
-  if(e.target.id==="ideaform"){e.preventDefault();const t=$("#i-t").value.trim(),d=$("#i-d").value.trim();let s=$("#i-s").value;if(s==="__new"){const n=$("#i-new").value.trim();s=n?addArea(n):""}if(!t||!s||!d){toast("צריך את שלושת השדות");return}IDEAS.unshift({id:"IDEA-"+(Math.max(0,...IDEAS.map(x=>+String(x.id).split("-")[1]||0))+1),title:t,sector:s,desc:d,by:me,at:TODAY,ts:now(),status:"new",comments:[]});persist();rerender();toast("הרעיון נוסף. המנהלים יראו אותו במונה 💡")}
+  if(e.target.id==="ideaform"){e.preventDefault();const t=$("#i-t").value.trim(),d=$("#i-d").value.trim();let s=$("#i-s").value;if(s==="__new"){const n=$("#i-new").value.trim();s=n?addArea(n):""}if(!t||!s||!d){toast("צריך את שלושת השדות");return}IDEAS.unshift({id:"IDEA-"+(Math.max(0,...IDEAS.map(x=>+String(x.id).split("-")[1]||0),...U.flatMap(u=>(u.comments||[]).map(c=>+((String(c[2]).match(/^נפתחה מרעיון IDEA-(\d+)/)||[])[1]||0))))+1),title:t,sector:s,desc:d,by:me,at:TODAY,ts:now(),status:"new",comments:[]});persist();rerender();toast("הרעיון נוסף. המנהלים יראו אותו במונה 💡")}
 });
 document.addEventListener("change",e=>{
   const t=e.target;
